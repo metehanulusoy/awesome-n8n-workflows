@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>n8n Workflow Explorer — 2,055 Automation Templates</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d2e;
+    --surface2: #222640;
+    --border: #2e3460;
+    --accent: #6c63ff;
+    --accent2: #ff6b6b;
+    --text: #e8eaf6;
+    --text2: #9da3c8;
+    --green: #4ecca3;
+    --orange: #f5a623;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; }
+
+  /* HEADER */
+  .header { background:linear-gradient(135deg,#1a1d2e 0%,#0f1117 100%); border-bottom:1px solid var(--border); padding:32px 24px 24px; text-align:center; }
+  .header h1 { font-size:2.2rem; font-weight:800; background:linear-gradient(90deg,var(--accent),var(--green)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:8px; }
+  .header p { color:var(--text2); font-size:1rem; margin-bottom:20px; }
+  .stats { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
+  .stat { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:10px 20px; text-align:center; }
+  .stat .num { font-size:1.5rem; font-weight:700; color:var(--accent); }
+  .stat .lbl { font-size:0.7rem; color:var(--text2); text-transform:uppercase; letter-spacing:1px; }
+
+  /* CONTROLS */
+  .controls { padding:20px 24px; display:flex; gap:12px; flex-wrap:wrap; align-items:center; max-width:1400px; margin:0 auto; }
+  .search-wrap { flex:1; min-width:200px; position:relative; }
+  .search-wrap input { width:100%; padding:12px 16px 12px 44px; background:var(--surface); border:1px solid var(--border); border-radius:10px; color:var(--text); font-size:0.95rem; outline:none; transition:border .2s; }
+  .search-wrap input:focus { border-color:var(--accent); }
+  .search-wrap::before { content:'🔍'; position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:1rem; }
+  select { padding:12px 16px; background:var(--surface); border:1px solid var(--border); border-radius:10px; color:var(--text); font-size:0.9rem; outline:none; cursor:pointer; }
+  select:focus { border-color:var(--accent); }
+  .count-badge { background:var(--surface2); border:1px solid var(--border); padding:10px 16px; border-radius:10px; color:var(--text2); font-size:0.9rem; white-space:nowrap; }
+  .count-badge span { color:var(--accent); font-weight:700; }
+
+  /* CATEGORY PILLS */
+  .cats { padding:0 24px 16px; display:flex; gap:8px; flex-wrap:wrap; max-width:1400px; margin:0 auto; }
+  .cat-pill { padding:6px 14px; border-radius:20px; border:1px solid var(--border); background:var(--surface); color:var(--text2); font-size:0.8rem; cursor:pointer; transition:all .2s; user-select:none; }
+  .cat-pill:hover { border-color:var(--accent); color:var(--text); }
+  .cat-pill.active { background:var(--accent); border-color:var(--accent); color:white; font-weight:600; }
+
+  /* GRID */
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:16px; padding:0 24px 40px; max-width:1400px; margin:0 auto; }
+
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; cursor:pointer; transition:all .2s; }
+  .card:hover { border-color:var(--accent); transform:translateY(-2px); box-shadow:0 8px 24px rgba(108,99,255,.15); }
+  .card-cat { font-size:0.7rem; color:var(--text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+  .card-name { font-size:0.9rem; font-weight:600; color:var(--text); margin-bottom:10px; line-height:1.4; }
+  .card-services { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+  .service-tag { background:var(--surface2); border:1px solid var(--border); padding:3px 8px; border-radius:6px; font-size:0.72rem; color:var(--text2); }
+  .card-footer { display:flex; justify-content:space-between; align-items:center; }
+  .node-count { font-size:0.75rem; color:var(--text2); }
+  .download-btn { background:var(--accent); color:white; border:none; padding:5px 12px; border-radius:6px; font-size:0.75rem; cursor:pointer; transition:opacity .2s; }
+  .download-btn:hover { opacity:.85; }
+
+  /* EMPTY STATE */
+  .empty { text-align:center; padding:60px; color:var(--text2); }
+  .empty .emoji { font-size:3rem; margin-bottom:12px; }
+
+  /* LOAD MORE */
+  .load-more { text-align:center; padding:20px; }
+  .load-more button { background:var(--surface2); border:1px solid var(--border); color:var(--text); padding:12px 32px; border-radius:10px; cursor:pointer; font-size:0.9rem; transition:all .2s; }
+  .load-more button:hover { border-color:var(--accent); color:var(--accent); }
+
+  /* MODAL */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:100; align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--surface); border:1px solid var(--border); border-radius:16px; max-width:560px; width:100%; padding:28px; position:relative; max-height:90vh; overflow-y:auto; }
+  .modal h2 { font-size:1.1rem; margin-bottom:16px; line-height:1.4; }
+  .modal-field { margin-bottom:12px; }
+  .modal-field label { font-size:0.75rem; color:var(--text2); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:4px; }
+  .modal-field p { font-size:0.9rem; }
+  .modal-close { position:absolute; top:16px; right:16px; background:none; border:none; color:var(--text2); font-size:1.4rem; cursor:pointer; }
+  .modal-close:hover { color:var(--text); }
+  .modal-actions { display:flex; gap:10px; margin-top:20px; }
+  .btn-primary { flex:1; background:var(--accent); color:white; border:none; padding:12px; border-radius:10px; font-size:0.9rem; cursor:pointer; font-weight:600; transition:opacity .2s; }
+  .btn-primary:hover { opacity:.85; }
+  .btn-secondary { flex:1; background:var(--surface2); color:var(--text); border:1px solid var(--border); padding:12px; border-radius:10px; font-size:0.9rem; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⚡ n8n Workflow Explorer</h1>
+  <p>Browse and discover 2,055 production-ready automation workflow templates</p>
+  <div class="stats">
+    <div class="stat"><div class="num">2,055</div><div class="lbl">Total Workflows</div></div>
+    <div class="stat"><div class="num">784</div><div class="lbl">AI Agents</div></div>
+    <div class="stat"><div class="num">50+</div><div class="lbl">Integrations</div></div>
+    <div class="stat"><div class="num">11</div><div class="lbl">Categories</div></div>
+  </div>
+</div>
+
+<div class="controls" style="max-width:1400px;margin:0 auto;">
+  <div class="search-wrap">
+    <input type="text" id="searchInput" placeholder="Search workflows... (e.g. telegram, openai, shopify)" oninput="render()">
+  </div>
+  <select id="sortSelect" onchange="render()">
+    <option value="default">Default Order</option>
+    <option value="nodes-desc">Most Nodes</option>
+    <option value="nodes-asc">Fewest Nodes</option>
+    <option value="alpha">A–Z</option>
+  </select>
+  <div class="count-badge">Showing <span id="countDisplay">0</span> workflows</div>
+</div>
+
+<div class="cats" id="catPills"></div>
+
+<div class="grid" id="grid"></div>
+<div class="load-more" id="loadMore" style="display:none;">
+  <button onclick="showMore()">Load More Workflows</button>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h2 id="modalTitle"></h2>
+    <div class="modal-field"><label>Category</label><p id="modalCat"></p></div>
+    <div class="modal-field"><label>Services Used</label><p id="modalServices"></p></div>
+    <div class="modal-field"><label>Node Count</label><p id="modalNodes"></p></div>
+    <div class="modal-field"><label>File</label><p id="modalFile" style="font-size:0.8rem;color:var(--text2);word-break:break-all;"></p></div>
+    <div class="modal-actions">
+      <button class="btn-primary" id="modalDownload">📥 Download JSON</button>
+      <button class="btn-secondary" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Inline workflow data will be generated
+const CAT_COLORS = {
+  "🤖 AI & LLM Agents": "#6c63ff",
+  "📞 Communication Bots": "#4ecca3",
+  "📊 CRM & Sales": "#f5a623",
+  "🛒 E-Commerce": "#ff6b6b",
+  "📋 Project Management": "#00d2ff",
+  "📁 Google Workspace": "#4285f4",
+  "📣 Marketing & Social": "#e91e63",
+  "🗄️ Data & Database": "#ff9800",
+  "⚙️ DevOps & GitHub": "#607d8b",
+  "📂 Files & Productivity": "#9c27b0",
+  "🔧 General Automation": "#757575"
+};
+
+let activeCategory = null;
+let displayLimit = 60;
+
+function getFiltered() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  const sort = document.getElementById('sortSelect').value;
+
+  let data = WORKFLOWS.filter(w => {
+    const matchCat = !activeCategory || w.c === activeCategory;
+    if (!matchCat) return false;
+    if (!q) return true;
+    return w.n.toLowerCase().includes(q) ||
+           w.c.toLowerCase().includes(q) ||
+           w.f.toLowerCase().includes(q) ||
+           (w.s && w.s.some(s => s.toLowerCase().includes(q)));
+  });
+
+  if (sort === 'nodes-desc') data.sort((a,b) => b.nc - a.nc);
+  else if (sort === 'nodes-asc') data.sort((a,b) => a.nc - b.nc);
+  else if (sort === 'alpha') data.sort((a,b) => a.n.localeCompare(b.n));
+
+  return data;
+}
+
+function renderCatPills() {
+  const cats = [...new Set(WORKFLOWS.map(w => w.c))].sort();
+  const counts = {};
+  WORKFLOWS.forEach(w => counts[w.c] = (counts[w.c]||0)+1);
+
+  const container = document.getElementById('catPills');
+  container.innerHTML = '';
+
+  const all = document.createElement('div');
+  all.className = 'cat-pill' + (activeCategory === null ? ' active' : '');
+  all.textContent = `All (${WORKFLOWS.length})`;
+  all.onclick = () => { activeCategory = null; displayLimit = 60; renderCatPills(); render(); };
+  container.appendChild(all);
+
+  cats.forEach(cat => {
+    const pill = document.createElement('div');
+    pill.className = 'cat-pill' + (activeCategory === cat ? ' active' : '');
+    pill.textContent = `${cat} (${counts[cat]||0})`;
+    pill.onclick = () => { activeCategory = cat; displayLimit = 60; renderCatPills(); render(); };
+    container.appendChild(pill);
+  });
+}
+
+function render() {
+  const filtered = getFiltered();
+  const visible = filtered.slice(0, displayLimit);
+
+  document.getElementById('countDisplay').textContent = filtered.length.toLocaleString();
+
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><div class="emoji">🔍</div><p>No workflows found. Try a different search.</p></div>';
+    document.getElementById('loadMore').style.display = 'none';
+    return;
+  }
+
+  visible.forEach(w => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.onclick = () => openModal(w);
+
+    const color = CAT_COLORS[w.c] || '#6c63ff';
+    const services = w.s && w.s.length ? w.s : ['HTTP/Webhook'];
+
+    card.innerHTML = `
+      <div class="card-cat" style="color:${color}">${w.c}</div>
+      <div class="card-name">${escHtml(w.n || w.f.replace('.json','').replace(/_/g,' '))}</div>
+      <div class="card-services">
+        ${services.map(s => `<span class="service-tag">${escHtml(s)}</span>`).join('')}
+      </div>
+      <div class="card-footer">
+        <span class="node-count">📦 ${w.nc} nodes</span>
+        <button class="download-btn" onclick="event.stopPropagation();downloadFile('${w.f}')">Download</button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  const lm = document.getElementById('loadMore');
+  if (filtered.length > displayLimit) {
+    lm.style.display = 'block';
+    lm.querySelector('button').textContent = `Load More (${filtered.length - displayLimit} remaining)`;
+  } else {
+    lm.style.display = 'none';
+  }
+}
+
+function showMore() {
+  displayLimit += 60;
+  render();
+}
+
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function openModal(w) {
+  document.getElementById('modalTitle').textContent = w.n || w.f.replace('.json','').replace(/_/g,' ');
+  document.getElementById('modalCat').textContent = w.c;
+  document.getElementById('modalServices').textContent = (w.s && w.s.length ? w.s : ['HTTP/Webhook']).join(', ');
+  document.getElementById('modalNodes').textContent = `${w.nc} nodes`;
+  document.getElementById('modalFile').textContent = w.f;
+  document.getElementById('modalDownload').onclick = () => downloadFile(w.f);
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+function downloadFile(fname) {
+  const a = document.createElement('a');
+  a.href = fname;
+  a.download = fname;
+  a.click();
+}
+
+// INIT
+renderCatPills();
+render();
+</script>
+
+<!-- WORKFLOW DATA (generated) -->
+<script src="workflow_data.js"></script>
+<script>
+// Re-render once data is loaded
+if (typeof WORKFLOWS !== 'undefined') { renderCatPills(); render(); }
+</script>
+</body>
+</html>
