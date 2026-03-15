@@ -616,12 +616,17 @@
       });
 
       function downloadFile(fname) {
-        const a = document.createElement("a");
-        a.href =
+        const url =
           "https://raw.githubusercontent.com/metehanulusoy/awesome-n8n-workflows/main/workflows/" +
           fname;
-        a.download = fname;
-        a.click();
+        fetch(url)
+          .then((r) => r.blob())
+          .then((blob) => {
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = fname;
+            a.click();
+          });
       }
 
       // INIT
